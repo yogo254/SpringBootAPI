@@ -1,6 +1,7 @@
 package com.comulynx.wallet.rest.api.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ import com.google.gson.JsonObject;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping(AppUtils.BASE_URL+"/transactions")
+@RequestMapping(AppUtils.BASE_URL + "/transactions")
 public class TransactionController {
 	private Gson gson = new Gson();
 
@@ -60,18 +61,20 @@ public class TransactionController {
 	 * @throws ResourceNotFoundException
 	 */
 	@PostMapping("/mini-statement")
-	public ResponseEntity<?> getMiniStatementByCustomerIdAndAccountNo(@RequestBody String request)
+	public ResponseEntity<?> getMiniStatementByCustomerIdAndAccountNo(@RequestBody Transaction request)
 			throws ResourceNotFoundException {
 		try {
-			final JsonObject balanceRequest = gson.fromJson(request, JsonObject.class);
-			String customerId = balanceRequest.get("customerId").getAsString();
-			String accountNo = balanceRequest.get("accountNo").getAsString();
 
-			
-			List<Transaction> miniStatement = transactionRepository
-					.getMiniStatementUsingCustomerIdAndAccountNo(customerId, accountNo);
+			Optional<List<Transaction>> optionalMiniStatement = transactionRepository
+					.getMiniStatementUsingCustomerIdAndAccountNo(request.getCustomerId(), request.getAccountNo());
 
-			return ResponseEntity.ok().body(gson.toJson(miniStatement));
+			if (optionalMiniStatement.isPresent()) {
+				List<Transaction> miniStatement = optionalMiniStatement.get();
+
+				return ResponseEntity.ok().body(miniStatement);
+			} else
+				return ResponseEntity.badRequest().body("invalid transaction");
+
 		} catch (Exception ex) {
 			return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 

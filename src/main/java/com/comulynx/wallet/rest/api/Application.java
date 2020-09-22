@@ -10,8 +10,9 @@ public class Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
-	
 
-	// TODO : Add BCryptPasswordEncoder bean here
-
+	@Bean
+	public BCryptPasswordEncoder gEncoder() {
+		return new BCryptPasswordEncoder(10);
+	}
 }

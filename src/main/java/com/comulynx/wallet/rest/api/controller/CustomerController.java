@@ -3,10 +3,13 @@ package com.comulynx.wallet.rest.api.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.comulynx.wallet.rest.api.exception.CustomerExistsException;
 import com.comulynx.wallet.rest.api.exception.ResourceNotFoundException;
 import com.comulynx.wallet.rest.api.model.Account;
 import com.comulynx.wallet.rest.api.model.Customer;
@@ -26,13 +30,16 @@ import com.comulynx.wallet.rest.api.util.AppUtils;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping(AppUtils.BASE_URL+"/customers")
+@RequestMapping(AppUtils.BASE_URL + "/customers")
+
 public class CustomerController {
 
 	@Autowired
 	private CustomerRepository customerRepository;
 	@Autowired
 	private AccountRepository accountRepository;
+	@Autowired
+	private BCryptPasswordEncoder encoder;
 
 	/**
 	 * 
@@ -42,7 +49,7 @@ public class CustomerController {
 	 * @return
 	 */
 	@PostMapping("/login")
-	public ResponseEntity<?> customerLogin(@RequestBody String request) {
+	public ResponseEntity<?> customerLogin(@RequestBody Customer request) {
 		try {
 
 			return ResponseEntity.status(200).body(HttpStatus.OK);
@@ -52,7 +59,6 @@ public class CustomerController {
 
 		}
 	}
-
 
 	@GetMapping("/")
 	public List<Customer> getAllCustomers() {
@@ -70,12 +76,19 @@ public class CustomerController {
 	@PostMapping("/create")
 	public ResponseEntity<?> createCustomer(@RequestBody Customer customer) {
 		try {
-			// TODO : Add logic to Hash Customer PIN here
-			// TODO : Add logic to check if Customer with provided username, or
-			// customerId exists. If exists, throw a Customer with [?] exists
-			// Exception.
 
-			String accountNo = generateAccountNo(customer.getCustomerId());
+			customer.setPin(encoder.encode(customer.getPin()));
+			boolean customerEmailExists = customerRepository.existsByEmail(customer.getEmail());
+			boolean customerExistsByCustomerId = customerRepository.existsByCustomerId(customer.getCustomerId());
+
+			if (customerEmailExists)
+				throw new CustomerExistsException("Customer with email [ " + customer.getEmail() + " ] exists");
+
+			else if (customerExistsByCustomerId)
+				throw new CustomerExistsException(
+						"Customer with Customer Id [" + customer.getCustomerId() + " ] exists");
+
+			String accountNo = generateAccountNo();
 			Account account = new Account();
 			account.setCustomerId(customer.getCustomerId());
 			account.setAccountNo(accountNo);
@@ -114,14 +127,16 @@ public class CustomerController {
 		return response;
 	}
 
-	/**
-	 * generate a random but unique Account No (NB: Account No should be unique
-	 * in your accounts table)
-	 * 
-	 */
-	private String generateAccountNo(String customerId) {
-		// TODO : Add logic here - generate a random but unique Account No (NB:
-		// Account No should be unique in the accounts table)
-		return "";
+	private String generateAccountNo() {
+		String accountNo = "ACT";
+		final String nums = "0123456789";
+
+		Random r = new Random();
+
+		for (int i = 0; i < 4; i++) {
+			accountNo += String.valueOf(nums.charAt(r.nextInt(nums.length())));
+		}
+
+		return accountNo;
 	}
 }

@@ -1,8 +1,11 @@
 package com.comulynx.wallet.rest.api.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.comulynx.wallet.rest.api.exception.ResourceNotFoundException;
@@ -20,10 +24,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.comulynx.wallet.rest.api.util.AppUtils;
 
-
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping(AppUtils.BASE_URL+"/accounts")
+@RequestMapping(AppUtils.BASE_URL + "/accounts")
 public class AccountController {
 	private Gson gson = new Gson();
 
@@ -32,6 +35,7 @@ public class AccountController {
 
 	@GetMapping("/")
 	public List<Account> getAllAccount() {
+	
 		return accountRepository.findAll();
 	}
 
@@ -46,21 +50,16 @@ public class AccountController {
 		return ResponseEntity.ok().body(account);
 	}
 
-	@GetMapping("/balance")
-	public ResponseEntity<?> getAccountBalanceByCustomerIdAndAccountNo(@RequestBody String request)
+	@PostMapping("/balance")
+	public ResponseEntity<?> getAccountBalanceByCustomerIdAndAccountNo(@RequestBody Account account)
 			throws ResourceNotFoundException {
 		try {
 			JsonObject response = new JsonObject();
 
-			final JsonObject balanceRequest = gson.fromJson(request, JsonObject.class);
-			String customerId = balanceRequest.get("customerId").getAsString();
-			String accountNo = balanceRequest.get("accountNo").getAsString();
-
-			// TODO : Add logic to find account balance by CustomerId And
-			// AccountNo
-			Account account = null;
-			
-			response.addProperty("balance", account.getBalance());
+			Optional<Account> userAccount = accountRepository
+					.findAccountByCustomerIdAndAccountNo(account.getCustomerId(), account.getAccountNo());
+			if (userAccount.isPresent())
+				response.addProperty("balance", userAccount.get().getBalance());
 			return ResponseEntity.ok().body(gson.toJson(response));
 		} catch (Exception ex) {
 			return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -68,7 +67,7 @@ public class AccountController {
 		}
 	}
 
-	@PostMapping("/")
+	@PostMapping("/create")
 	public Account createAccount(@RequestBody Account account) {
 		return accountRepository.save(account);
 	}

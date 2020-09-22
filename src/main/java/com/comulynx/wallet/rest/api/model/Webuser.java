@@ -10,45 +10,36 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "webusers")
 public class Webuser {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-    @Column(unique = true,nullable = false)
-    private String username;
-    private String password;
+	@Column(unique = true, nullable = false)
+	private String username;
+	private String password;
 	private String firstName;
 	private String lastName;
-	@Column(unique = true,nullable = false)
+	@Column(unique = true, nullable = false)
 	private String email;
-	@Column(unique = true,nullable = false)
+	@Column(unique = true)
 	private String employeeId;
-	@Column(unique = true,nullable = false)
+	@Column(unique = true)
 	private String customerId;
 
-	
 	public Webuser() {
-		
+
 	}
-	
-	
-	
+
 	public String getCustomerId() {
 		return customerId;
 	}
-
-
 
 	public void setCustomerId(String customerId) {
 		this.customerId = customerId;
 	}
 
-
-
 	public String getEmployeeId() {
 		return employeeId;
 	}
-
-
 
 	public void setEmployeeId(String employeeId) {
 		this.employeeId = employeeId;
@@ -93,5 +84,5 @@ public class Webuser {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	
+
 }

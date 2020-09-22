@@ -8,10 +8,13 @@ import org.springframework.stereotype.Repository;
 import com.comulynx.wallet.rest.api.model.Webuser;
 
 @Repository
-public interface WebuserRepository extends JpaRepository<Webuser, Long>{
+public interface WebuserRepository extends JpaRepository<Webuser, Long> {
 	Webuser findByUsername(String username);
-    
+
+	Boolean existsByUsername(String username);
+
+	Boolean existsByEmail(String email);
+
 	Optional<Webuser> findByEmployeeId(String employeeId);
-	
 
 }
